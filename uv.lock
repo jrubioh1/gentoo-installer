@@ -109,7 +109,6 @@ source = { editable = "." }
 dependencies = [
     { name = "bs4" },
     { name = "pydicts" },
-    { name = "python-gnupg" },
     { name = "requests" },
     { name = "tqdm" },
 ]
@@ -118,7 +117,6 @@ dependencies = [
 requires-dist = [
     { name = "bs4", specifier = ">=0.0.2" },
     { name = "pydicts", specifier = ">=1.4.0" },
-    { name = "python-gnupg", specifier = ">=0.5.6" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "tqdm", specifier = ">=4.67.3" },
 ]
@@ -153,15 +151,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/11/6a/7578a4af068fe416da3c5b8db429cc1d2fa394cf2c43fa7ae8ef8b586f27/pydicts-1.4.0.tar.gz", hash = "sha256:f8adf640628aec53c8714701c0a1dab4173943dfc495e2ebfa8983b6c9e34d37", size = 59704, upload-time = "2026-05-25T05:59:51.567Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fc/bc/6939bd464a8e043ea2dbcd8368ec1edc7356f1f12681d71da3456a55740c/pydicts-1.4.0-py3-none-any.whl", hash = "sha256:b35575e8c63b91421bf1b6854076920c1212b95efd0a17e1d4930b89e6cc21cb", size = 69843, upload-time = "2026-05-25T05:59:52.576Z" },
-]
-
-[[package]]
-name = "python-gnupg"
-version = "0.5.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/98/2c/6cd2c7cff4bdbb434be5429ef6b8e96ee6b50155551361f30a1bb2ea3c1d/python_gnupg-0.5.6.tar.gz", hash = "sha256:5743e96212d38923fc19083812dc127907e44dbd3bcf0db4d657e291d3c21eac", size = 66825, upload-time = "2025-12-31T17:19:33.19Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/ab/0ea9de971caf3cd2e268d2b05dfe9883b21cfe686a59249bd2dccb4bae33/python_gnupg-0.5.6-py2.py3-none-any.whl", hash = "sha256:b5050a55663d8ab9fcc8d97556d229af337a87a3ebebd7054cbd8b7e2043394a", size = 22082, upload-time = "2025-12-31T17:16:22.743Z" },
 ]
 
 [[package]]

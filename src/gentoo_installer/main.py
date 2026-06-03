@@ -1,21 +1,61 @@
 import argparse
 from tempfile import TemporaryDirectory
 import os
+import sys
 from gentoo_installer.taker.core import main as taker_main
+from gentoo_installer.partitioner.core import main as partitioner_main
+from pydicts import colors
 
 def main():
+    # Auto-elevate to root if necessary
+    if os.geteuid() != 0:
+        print(colors.yellow("\n[*] This script requires root privileges. Requesting sudo..."))
+        try:
+            # Re-run the current script with sudo, preserving environment (-E)
+            os.execvp("sudo", ["sudo", "-E", sys.executable] + sys.argv)
+        except Exception as e:
+            print(colors.red(f"\n[!] Failed to elevate privileges: {e}"))
+            sys.exit(1)
+
     parser = argparse.ArgumentParser(description="Gentoo Installer")
-    #args
+    parser.add_argument("--only-stage", action="store_true", help="Only run the Stage3 acquisition phase")
+    parser.add_argument("--only-partition", action="store_true", help="Only run the Disk Partitioning phase")
     args = parser.parse_args()
     
-    with TemporaryDirectory() as tmp_dir:
-        output_path = taker_main(tmp_dir)
-        if output_path:
-                print(f"Stage file is located at: {output_path}")
-                
-        else:
-                print("Failed to obtain stage file.")
-                return 1
+    # Determine which phases to run
+    run_all = not (args.only_stage or args.only_partition)
+    
+    print(colors.magenta("=" * 60))
+    print(colors.magenta("      GENTOO LINUX INSTALLER - STARTING FLOW"))
+    print(colors.magenta("=" * 60))
+
+    # Step 1: Stage3 Discovery and Download
+    if run_all or args.only_stage:
+        with TemporaryDirectory() as tmp_dir:
+            stage_path = taker_main(tmp_dir)
+            if not stage_path:
+                print(colors.red("\n[✗] Stage acquisition failed. Exiting."))
+                sys.exit(1)
+            print(colors.green(f"\n[✓] Stage3 ready for deployment."))
+            if args.only_stage:
+                print(colors.cyan("\n[*] Execution finished (--only-stage)."))
+                return
+
+    # Step 2: Disk Partitioning and Formatting
+    if run_all or args.only_partition:
+        partition_info = partitioner_main()
+        if not partition_info:
+            print(colors.red("\n[✗] Partitioning failed or aborted. Exiting."))
+            sys.exit(1)
+        print(colors.green("\n[✓] Partitioning and formatting completed successfully."))
+        if args.only_partition:
+            print(colors.cyan("\n[*] Execution finished (--only-partition)."))
+            return
+        
+    print(colors.magenta("\n" + "=" * 60))
+    print(colors.magenta("      PHASE 1 (ACQUISITION & DISK) COMPLETE"))
+    print(colors.magenta("=" * 60))
+
 
 if __name__ == "__main__":
     main()
