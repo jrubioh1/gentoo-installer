@@ -31,8 +31,6 @@ def format_partition(partition_path, fs_type):
         if fs_type == 'vfat':
             # FAT32 for EFI/Boot
             cmd = ["mkfs.vfat", "-F", "32", partition_path]
-        elif fs_type == 'swap':
-            cmd = ["mkswap", partition_path]
         else:
             # ext4, xfs, etc.
             cmd = [f"mkfs.{fs_type}", partition_path]
@@ -42,7 +40,7 @@ def format_partition(partition_path, fs_type):
         print(colors.green(f"    [✓] Successfully formatted {partition_path}"))
         return True
     except subprocess.CalledProcessError as e:
-        print(colors.red(f"    [✗] Failed to format {partition_path}: {e.stderr}"))
+        print(colors.red(f"    [✗] Failed to format {partition_path}: {e.stderr.decode() if e.stderr else 'Unknown error'}"))
         return False
 
 def wipe_and_partition(device_path, boot_size):
@@ -74,18 +72,33 @@ def wipe_and_partition(device_path, boot_size):
         print(colors.green(f"    [✓] GPT Partition table created successfully."))
         return True
     except subprocess.CalledProcessError as e:
-        print(colors.red(f"    [✗] Partitioning failed: {e.stderr}"))
+        print(colors.red(f"    [✗] Partitioning failed: {e.stderr.decode() if e.stderr else 'Unknown error'}"))
         return False
 
 def get_partition_paths(device_path):
-    """Returns the paths for the newly created boot and root partitions."""
+    """Returns the paths for the newly created boot and root partitions using lsblk."""
+    try:
+        # Get children partitions of the device
+        cmd = ["lsblk", device_path, "--json", "--output", "PATH,TYPE"]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        data = json.loads(result.stdout)
+        
+        # The first device is the disk itself, children are partitions
+        partitions = []
+        for dev in data.get('blockdevices', []):
+            for child in dev.get('children', []):
+                if child.get('type') == 'part':
+                    partitions.append(child.get('path'))
+        
+        if len(partitions) >= 2:
+            return partitions[0], partitions[1]
+    except Exception as e:
+        print(colors.yellow(f"    [!] Warning: Could not detect partitions with lsblk: {e}"))
+    
+    # Fallback to legacy detection if lsblk fails
     if "nvme" in device_path or "mmcblk" in device_path:
-        p1 = f"{device_path}p1"
-        p2 = f"{device_path}p2"
-    else:
-        p1 = f"{device_path}1"
-        p2 = f"{device_path}2"
-    return p1, p2
+        return f"{device_path}p1", f"{device_path}p2"
+    return f"{device_path}1", f"{device_path}2"
 
 def main():
     """Customizable automated partitioning workflow."""
@@ -137,7 +150,6 @@ def main():
     confirm = input(colors.red(f"Type 'YES' to confirm: ")).strip()
     
     if confirm.upper() != "YES":
-        print(f"DEBUG: Received '{confirm}'") 
         print(colors.yellow("\n[*] Aborted by user."))
         return None
 
